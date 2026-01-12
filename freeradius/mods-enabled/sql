@@ -1,0 +1,18 @@
+sql {
+  dialect = "mysql"
+  driver = "rlm_sql_mysql"
+
+  server = "mysql"
+  port = 3306
+  login = "${DB_USER}"
+  password = "${DB_PASS}"
+  radius_db = "${DB_NAME}"
+
+  read_clients = yes
+  client_table = "nas"
+
+  acct_table1 = "radacct"
+  acct_table2 = "radacct"
+
+  $INCLUDE /etc/freeradius/3.0/mods-config/sql/main/mysql/queries.conf
+}

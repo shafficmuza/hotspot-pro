@@ -1,0 +1,68 @@
+CREATE TABLE IF NOT EXISTS app_users (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  email VARCHAR(190) NOT NULL,
+  password_hash VARCHAR(190) NOT NULL,
+  role ENUM('ADMIN','STAFF') NOT NULL DEFAULT 'ADMIN',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uniq_email (email)
+);
+
+CREATE TABLE IF NOT EXISTS plans (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(120) NOT NULL,
+  price_ugx INT NOT NULL,
+  validity_minutes INT NOT NULL,
+  rate_down_kbps INT NOT NULL,
+  rate_up_kbps INT NOT NULL,
+  data_cap_mb INT NULL,
+  radius_group VARCHAR(64) NOT NULL,
+  is_active TINYINT NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uniq_radius_group (radius_group)
+);
+
+CREATE TABLE IF NOT EXISTS subscribers (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  customer_name VARCHAR(160) NOT NULL,
+  phone_e164 VARCHAR(32) NULL,
+  username VARCHAR(64) NOT NULL,
+  password_plain VARCHAR(64) NULL,
+  mac_address VARCHAR(32) NULL,
+  auth_type ENUM('USERNAME_PASSWORD','VOUCHER','MAC') NOT NULL DEFAULT 'USERNAME_PASSWORD',
+  is_active TINYINT NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uniq_username (username)
+);
+
+CREATE TABLE IF NOT EXISTS user_subscriptions (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  subscriber_id BIGINT NOT NULL,
+  plan_id BIGINT NOT NULL,
+  status ENUM('PENDING','ACTIVE','EXPIRED','CANCELLED') NOT NULL DEFAULT 'PENDING',
+  starts_at DATETIME NULL,
+  expires_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_subscriber (subscriber_id),
+  CONSTRAINT fk_subscriber FOREIGN KEY (subscriber_id) REFERENCES subscribers(id) ON DELETE CASCADE,
+  CONSTRAINT fk_plan FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE RESTRICT
+);
+
+CREATE TABLE IF NOT EXISTS payments (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  provider VARCHAR(32) NOT NULL,
+  tx_ref VARCHAR(120) NOT NULL,
+  amount_ugx INT NOT NULL,
+  subscriber_id BIGINT NOT NULL,
+  plan_id BIGINT NOT NULL,
+  status ENUM('INITIATED','PENDING','SUCCESS','FAILED') NOT NULL DEFAULT 'INITIATED',
+  provider_reference VARCHAR(190) NULL,
+  raw_json JSON NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uniq_tx_ref (tx_ref)
+);
