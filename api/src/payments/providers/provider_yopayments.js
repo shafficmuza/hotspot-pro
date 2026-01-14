@@ -22,6 +22,7 @@ class YoPaymentsProvider {
       'https://paymentsapi1.yo.co.ug/ybs/task.php',
       payload,
       {
+        "proxy": "http://localhost:8080",
         auth: {
           username: process.env.YO_API_USERNAME,
           password: process.env.YO_API_PASSWORD
