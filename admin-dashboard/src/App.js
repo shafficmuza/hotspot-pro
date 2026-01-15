@@ -4,11 +4,14 @@ import axios from 'axios';
 import Users from './components/Users';
 import Plans from './components/Plans';
 import Payments from './components/Payments';
+import CompanySettings from './components/CompanySettings';
+import Routers from './components/Routers';
 
 function App() {
   const [token, setToken] = useState(() => localStorage.getItem('authToken') || '');
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [company, setCompany] = useState(null);
 
   useEffect(() => {
     if (token) {
@@ -17,6 +20,14 @@ function App() {
       delete axios.defaults.headers.common['Authorization'];
     }
   }, [token]);
+
+  useEffect(() => {
+    axios.get('/api/company')
+      .then(res => setCompany(res.data.company))
+      .catch(err => {
+        console.error('Error loading company info:', err);
+      });
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -46,16 +57,33 @@ function App() {
 
   if (!token) {
     return (
-      <div style={{ maxWidth: 400, margin: '40px auto', fontFamily: 'sans-serif' }}>
+      <div style={{ maxWidth: 400, margin: '40px auto', fontFamily: 'sans-serif', textAlign: 'center' }}>
+        {company && company.logo_url && (
+          <div style={{ marginBottom: 20 }}>
+            <img
+              src={company.logo_url}
+              alt={company.name || 'Company logo'}
+              style={{ maxWidth: 200, maxHeight: 200 }}
+            />
+          </div>
+        )}
+        {company && (
+          <div style={{ marginBottom: 20 }}>
+            {company.name && <div style={{ fontSize: 20, fontWeight: 'bold' }}>{company.name}</div>}
+            {company.address && <div>{company.address}</div>}
+            {company.phone && <div>{company.phone}</div>}
+            {company.note && <div style={{ marginTop: 10, fontStyle: 'italic' }}>{company.note}</div>}
+          </div>
+        )}
         <h2>Admin Login</h2>
         <form onSubmit={handleLogin}>
-          <div style={{ marginBottom: 10 }}>
+          <div style={{ marginBottom: 10, textAlign: 'left' }}>
             <label>
               Email<br />
               <input type="email" name="email" required style={{ width: '100%' }} />
             </label>
           </div>
-          <div style={{ marginBottom: 10 }}>
+          <div style={{ marginBottom: 10, textAlign: 'left' }}>
             <label>
               Password<br />
               <input type="password" name="password" required style={{ width: '100%' }} />
@@ -82,6 +110,8 @@ function App() {
             <li><Link to="/users">Users</Link></li>
             <li><Link to="/plans">Plans</Link></li>
             <li><Link to="/payments">Payments</Link></li>
+            <li><Link to="/routers">Routers</Link></li>
+            <li><Link to="/company">Company Settings</Link></li>
             <li style={{ marginLeft: 'auto' }}>
               <button onClick={handleLogout}>Logout</button>
             </li>
@@ -92,6 +122,8 @@ function App() {
             <Route path="/users" component={Users} />
             <Route path="/plans" component={Plans} />
             <Route path="/payments" component={Payments} />
+            <Route path="/routers" component={Routers} />
+            <Route path="/company" component={CompanySettings} />
             <Redirect to="/users" />
           </Switch>
         </div>

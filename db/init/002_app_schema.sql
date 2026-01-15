@@ -66,3 +66,25 @@ CREATE TABLE IF NOT EXISTS payments (
   PRIMARY KEY (id),
   UNIQUE KEY uniq_tx_ref (tx_ref)
 );
+
+CREATE TABLE IF NOT EXISTS company_settings (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(190) NULL,
+  phone VARCHAR(64) NULL,
+  address VARCHAR(255) NULL,
+  note TEXT NULL,
+  logo_url VARCHAR(255) NULL,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS nas (
+  id INT NOT NULL AUTO_INCREMENT,
+  nasname VARCHAR(128) NOT NULL,
+  shortname VARCHAR(32),
+  type VARCHAR(30) DEFAULT 'other',
+  ports INT,
+  secret VARCHAR(60) NOT NULL DEFAULT 'testing123',
+  description VARCHAR(200),
+  PRIMARY KEY (id),
+  KEY nasname (nasname)
+);

@@ -47,4 +47,23 @@ const Payment = sequelize.define('payments', {
   updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW }
 }, { timestamps: false, underscored: true });
 
-module.exports = { sequelize, AppUser, Plan, Subscriber, Payment };
+const CompanySetting = sequelize.define('company_settings', {
+  id: { type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true },
+  name: { type: DataTypes.STRING(190), allowNull: true },
+  phone: { type: DataTypes.STRING(64), allowNull: true },
+  address: { type: DataTypes.STRING(255), allowNull: true },
+  note: { type: DataTypes.TEXT, allowNull: true },
+  logo_url: { type: DataTypes.STRING(255), allowNull: true }
+}, { timestamps: false, underscored: true });
+
+const Nas = sequelize.define('nas', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  nasname: { type: DataTypes.STRING(128), allowNull: false },
+  shortname: { type: DataTypes.STRING(32), allowNull: true },
+  type: { type: DataTypes.STRING(30), allowNull: false, defaultValue: 'other' },
+  ports: { type: DataTypes.INTEGER, allowNull: true },
+  secret: { type: DataTypes.STRING(60), allowNull: false, defaultValue: 'testing123' },
+  description: { type: DataTypes.STRING(200), allowNull: true }
+}, { timestamps: false, underscored: true });
+
+module.exports = { sequelize, AppUser, Plan, Subscriber, Payment, CompanySetting, Nas };

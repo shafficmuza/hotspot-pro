@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const Joi = require('joi');
-const { AppUser, Plan, Subscriber, Payment } = require('../models');
+const { AppUser, Plan, Subscriber, Payment, CompanySetting, Nas } = require('../models');
 const { signJwt, requireAuth, requireRole } = require('../lib/auth');
 const { initiatePayment, confirmPaymentByTxRef } = require('../payments/paymentService');
 
@@ -65,6 +65,14 @@ router.get('/subscribers', requireAuth, async (req, res) => {
   res.json({ subscribers });
 });
 
+router.post('/subscribers/:id/deactivate', requireAuth, requireRole('ADMIN'), async (req, res) => {
+  const subscriber = await Subscriber.findByPk(req.params.id);
+  if (!subscriber) return res.status(404).json({ error: 'not_found' });
+  subscriber.is_active = 0;
+  await subscriber.save();
+  res.json({ subscriber });
+});
+
 router.post('/payments/initiate', requireAuth, async (req, res) => {
   const { error, value } = Joi.object({
     subscriber_id: Joi.number().integer().required(),
@@ -89,10 +97,65 @@ router.post('/payments/confirm', async (req, res) => {
   res.json(result);
 });
 
-// NEW: list payments for admin dashboard
 router.get('/payments', requireAuth, async (req, res) => {
   const payments = await Payment.findAll({ order: [['id', 'DESC']] });
   res.json({ payments });
+});
+
+// Company settings
+router.get('/company', async (req, res) => {
+  let settings = await CompanySetting.findByPk(1);
+  if (!settings) {
+    settings = await CompanySetting.create({ id: 1, name: null, phone: null, address: null, note: null, logo_url: null });
+  }
+  res.json({ company: settings });
+});
+
+router.put('/company', requireAuth, requireRole('ADMIN'), async (req, res) => {
+  const { error, value } = Joi.object({
+    name: Joi.string().allow(null, ''),
+    phone: Joi.string().allow(null, ''),
+    address: Joi.string().allow(null, ''),
+    note: Joi.string().allow(null, ''),
+    logo_url: Joi.string().uri().allow(null, '')
+  }).validate(req.body);
+  if (error) return res.status(400).json({ error: error.message });
+
+  let settings = await CompanySetting.findByPk(1);
+  if (!settings) {
+    settings = await CompanySetting.create({ id: 1 });
+  }
+  Object.assign(settings, value);
+  await settings.save();
+  res.json({ company: settings });
+});
+
+// NAS / Routers
+router.get('/nas', requireAuth, requireRole('ADMIN'), async (req, res) => {
+  const items = await Nas.findAll({ order: [['id', 'DESC']] });
+  res.json({ nas: items });
+});
+
+router.post('/nas', requireAuth, requireRole('ADMIN'), async (req, res) => {
+  const { error, value } = Joi.object({
+    nasname: Joi.string().required(),
+    shortname: Joi.string().allow(null, ''),
+    type: Joi.string().default('other'),
+    ports: Joi.number().integer().allow(null),
+    secret: Joi.string().required(),
+    description: Joi.string().allow(null, '')
+  }).validate(req.body);
+  if (error) return res.status(400).json({ error: error.message });
+
+  const nas = await Nas.create(value);
+  res.json({ nas });
+});
+
+router.delete('/nas/:id', requireAuth, requireRole('ADMIN'), async (req, res) => {
+  const nas = await Nas.findByPk(req.params.id);
+  if (!nas) return res.status(404).json({ error: 'not_found' });
+  await nas.destroy();
+  res.json({ ok: true });
 });
 
 module.exports = router;
