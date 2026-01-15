@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const Joi = require('joi');
-const { AppUser, Plan, Subscriber } = require('../models');
+const { AppUser, Plan, Subscriber, Payment } = require('../models');
 const { signJwt, requireAuth, requireRole } = require('../lib/auth');
 const { initiatePayment, confirmPaymentByTxRef } = require('../payments/paymentService');
 
@@ -40,7 +40,10 @@ router.post('/plans', requireAuth, requireRole('ADMIN'), async (req, res) => {
   res.json({ plan: await Plan.create(value) });
 });
 
-router.get('/plans', requireAuth, async (req, res) => res.json({ plans: await Plan.findAll({ order: [['id','DESC']] }) }));
+router.get('/plans', requireAuth, async (req, res) => {
+  const plans = await Plan.findAll({ order: [['id', 'DESC']] });
+  res.json({ plans });
+});
 
 router.post('/subscribers', requireAuth, async (req, res) => {
   const { error, value } = Joi.object({
@@ -49,30 +52,47 @@ router.post('/subscribers', requireAuth, async (req, res) => {
     username: Joi.string().required(),
     password_plain: Joi.string().allow(null),
     mac_address: Joi.string().allow(null),
-    auth_type: Joi.string().valid('USERNAME_PASSWORD','VOUCHER','MAC').default('USERNAME_PASSWORD')
+    auth_type: Joi.string().valid('USERNAME_PASSWORD', 'VOUCHER', 'MAC').default('USERNAME_PASSWORD')
   }).validate(req.body);
   if (error) return res.status(400).json({ error: error.message });
 
-  res.json({ subscriber: await Subscriber.create(value) });
+  const subscriber = await Subscriber.create(value);
+  res.json({ subscriber });
 });
 
-router.get('/subscribers', requireAuth, async (req, res) => res.json({ subscribers: await Subscriber.findAll({ order: [['id','DESC']] }) }));
+router.get('/subscribers', requireAuth, async (req, res) => {
+  const subscribers = await Subscriber.findAll({ order: [['id', 'DESC']] });
+  res.json({ subscribers });
+});
 
 router.post('/payments/initiate', requireAuth, async (req, res) => {
   const { error, value } = Joi.object({
     subscriber_id: Joi.number().integer().required(),
     plan_id: Joi.number().integer().required(),
-    network: Joi.string().valid('MTN','AIRTEL').required()
+    network: Joi.string().valid('MTN', 'AIRTEL').required()
   }).validate(req.body);
   if (error) return res.status(400).json({ error: error.message });
 
-  res.json(await initiatePayment({ subscriberId: value.subscriber_id, planId: value.plan_id, network: value.network }));
+  const result = await initiatePayment({
+    subscriberId: value.subscriber_id,
+    planId: value.plan_id,
+    network: value.network
+  });
+  res.json(result);
 });
 
 router.post('/payments/confirm', async (req, res) => {
   const { error, value } = Joi.object({ tx_ref: Joi.string().required() }).validate(req.body);
   if (error) return res.status(400).json({ error: error.message });
-  res.json(await confirmPaymentByTxRef({ txRef: value.tx_ref }));
+
+  const result = await confirmPaymentByTxRef({ txRef: value.tx_ref });
+  res.json(result);
+});
+
+// NEW: list payments for admin dashboard
+router.get('/payments', requireAuth, async (req, res) => {
+  const payments = await Payment.findAll({ order: [['id', 'DESC']] });
+  res.json({ payments });
 });
 
 module.exports = router;

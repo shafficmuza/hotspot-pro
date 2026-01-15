@@ -15,7 +15,9 @@ function Payments() {
       <h2>Payments</h2>
       <ul>
         {payments.map(payment => (
-          <li key={payment.id}>{payment.tx_ref} - UGX {payment.amount_ugx} - {payment.status}</li>
+          <li key={payment.id}>
+            {payment.tx_ref} - UGX {payment.amount_ugx} - {payment.status}
+          </li>
         ))}
       </ul>
     </div>

@@ -53,7 +53,7 @@ docker compose exec api node ./scripts/seed-admin.js
 ```
 
 Admin:
-- email: `shafficmuza@gmail.com`
+- email: `admin@example.com`
 - password: `ChangeMeNow!`
 
 ### 5) Add routers (NAS) in `freeradius/clients.conf`
@@ -76,8 +76,10 @@ docker compose restart radius
 - Login: `POST /api/auth/login`
 - Plans: `POST /api/plans`, `GET /api/plans`
 - Subscribers: `POST /api/subscribers`, `GET /api/subscribers`
-- Initiate payment: `POST /api/payments/initiate`
-- Confirm payment (manual/webhook helper): `POST /api/payments/confirm`
+- Payments:
+  - Initiate payment: `POST /api/payments/initiate`
+  - Confirm payment (manual/webhook helper): `POST /api/payments/confirm`
+  - List payments: `GET /api/payments`
 - Webhooks:
   - `POST /webhooks/flutterwave`
   - `POST /webhooks/mtnmomo`
