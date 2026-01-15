@@ -46,9 +46,10 @@ CREATE TABLE IF NOT EXISTS user_subscriptions (
   expires_at DATETIME NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  KEY idx_subscriber (subscriber_id),
-  CONSTRAINT fk_subscriber FOREIGN KEY (subscriber_id) REFERENCES subscribers(id) ON DELETE CASCADE,
-  CONSTRAINT fk_plan FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE RESTRICT
+  KEY idx_subscriber (subscriber_id)
+  -- Foreign keys to subscribers(id) and plans(id) are intentionally omitted here
+  -- to avoid issues when running this init script in environments where
+  -- strict FK checks or creation order might cause errors.
 );
 
 CREATE TABLE IF NOT EXISTS payments (
